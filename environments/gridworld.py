@@ -9,6 +9,8 @@ class Gridworld(BaseEnv):
         self.cols = cols
         self.terminal_states = terminal_states or [0, rows*cols-1]
         self.actions = ["up", "down", "left", "right"]
+        self.action_to_idx = {a: i for i, a in enumerate(self.actions)}
+        self.idx_to_action = {i: a for i, a in enumerate(self.actions)}
         self.action_deltas = {
             "up": (-1, 0),
             "down": (1, 0),
