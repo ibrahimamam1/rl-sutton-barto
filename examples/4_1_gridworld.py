@@ -23,7 +23,7 @@ new_policy = policy_improvement(env, policy, V, gamma=1.0)
 # Evaluate new policy
 V_prime = policy_evaluation(env,new_policy,gamma=1.0, theta=1e-4)
 
-print(f'old policy{policy}')
+print(f'old policy: {policy}')
 print("Value Function:")
 print(V.reshape(4, 4))
 plot_value_function(V)

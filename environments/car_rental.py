@@ -12,15 +12,16 @@ class CarRental(BaseEnv):
         self.return_lamdas = return_lambdas
         self.move_cost = move_cost
         self.rent_reward = rent_reward
-        self.action = np.arrange(-self.max_car_moves, self.max_car_moves + 1)
-        self.states = [(i,j) for i in range(self.max_cars_per_loc + 1) for j in range(self.max_cars_per_loc + 1)]    
+        self.action = np.arange(-self.max_car_moves, self.max_car_moves + 1)
+        self.states = [(i,j) for i in range(self.max_cars_per_loc + 1) for j in range(self.max_cars_per_loc + 1)]
+        self.terminal_states = [] #no terminal states in this problem    
+        self.actions = [-5,-4,-3,-2,-1,0,1,2,3,4,5]
     
     def reset(self):
        pass 
 
     def get_actions(self):
-       return [-5,-4,-3,-2,-1,0,1,2,3,4,5]
-
+       return self.actions 
     
     def get_state(self,index):
         return self.states[index]
@@ -36,12 +37,16 @@ class CarRental(BaseEnv):
         return (state[0]-action,state[1]+action)
         
     def step(self, state, action):
-        next_state = self.get_next_state(state,action)
-        if(not self.state_valid(next_state)):
-            return state,0,False,{}
+        s = self.get_state(state)
+        next_state = self.get_next_state(s,action)
 
-        reward = self.get_reward(state,action,next_state)
-        return next_state, reward, False, {}
+        if(not self.state_valid(next_state)):
+            return state,0,0,False,{}
+
+        reward, transition_probs = self.get_reward(s,action,next_state)
+        next_state_prob = transition_probs.get(next_state, 0)
+        next_state_index = self.states.index(next_state)
+        return next_state_index, reward, next_state_prob, False, {}
 
     def get_reward(self, state, action,next_state=None):
         #moving cost for that day
@@ -61,21 +66,14 @@ class CarRental(BaseEnv):
 
                 #get return probabilities
                 for r1 in range(cutoff):
-                    p_r1 = poisson.pmf(r1,self.return_lambdas[0])
+                    p_r1 = poisson.pmf(r1,self.return_lamdas[0])
                     for r2 in range(cutoff):
-                        p_r2 = poisson.pmf(r2,self.return_lambdas[1])
+                        p_r2 = poisson.pmf(r2,self.return_lamdas[1])
                         new_cars1 = min(next_state[0] + r1,self.max_cars_per_loc)
                         new_cars2 = min(next_state[1] + r2,self.max_cars_per_loc)
                         probs[(new_cars1,new_cars2)] = probs.get((new_cars1,new_cars2),0) + p_d1 * p_d2 * p_r1 * p_r2
 
         return  expected_sales - cost, probs
-
-    def get_transition_probs(self,state,action,next_state):
-        s = self.get_state(state)
-        s_prime = self.get_state(next_state)
-        if(self.get_next_state(s,action) == s_prime):
-            return 1
-        return 0
 
     @property
     def n_actions(self):

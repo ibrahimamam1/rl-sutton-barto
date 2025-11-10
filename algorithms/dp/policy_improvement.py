@@ -19,13 +19,10 @@ def policy_improvement(env, policy, V, gamma=1.0):
 
         # Instead of appending, use indexing:
         for action_idx, action in enumerate(env.get_actions(s)):
-            q_a = 0
-            for s_prime in range(env.n_states):
-                trans_prob = env.get_transition_prob(s, action, s_prime)
-                reward = env.get_reward(s, action, s_prime)  # singular
-                q_a += trans_prob * (reward + gamma * V[s_prime])
+            next_state, reward, trans_prob, done, info = env.step(s, action)
+            q_a = trans_prob * (reward + gamma * V[next_state])
 
-            q[action_idx] = q_a  # Assign to index, don't append!
+            q[action_idx] = q_a 
 
         greedy_action = np.argmax(q)
         new_policy[s][greedy_action] = 1

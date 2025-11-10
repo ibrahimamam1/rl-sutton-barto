@@ -16,22 +16,19 @@ def policy_evaluation(env, policy, gamma=1.0, theta=1e-4):
     
     while True:
         delta = 0
+        print('doing an iteration of policy evaluation')
         for s in range(env.n_states):
+            print('in state:', s)
             if s in env.terminal_states:
                 continue
             
             v = V[s]
             new_v = 0
-            
             # Sum over all actions
             for action_idx, action in enumerate(env.actions):
                 action_prob = policy[s][action_idx]  
-                
-                #sum over all possible next states
-                for s_prime in range(env.n_states):
-                    trans_prob = env.get_transition_prob(s, action, s_prime)
-                    reward = env.get_reward(s, action, s_prime)
-                    new_v += action_prob * trans_prob * (reward + gamma * V[s_prime])
+                next_state, reward, trans_prob, done, info= env.step(s, action)
+                new_v += action_prob * trans_prob * (reward + gamma * V[next_state])
             
             V[s] = new_v
             delta = max(delta, abs(v - new_v))
