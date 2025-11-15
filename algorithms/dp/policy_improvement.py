@@ -17,7 +17,7 @@ def policy_improvement(env, policy, V, gamma=1.0):
         q = np.zeros(env.n_actions)
 
 
-        # Instead of appending, use indexing:
+        
         for action_idx, action in enumerate(env.get_actions(s)):
             next_state, reward, trans_prob, done, info = env.step(s, action)
             q_a = trans_prob * (reward + gamma * V[next_state])
