@@ -65,11 +65,12 @@ def policy_iteration(env, discount_factor):
         new_policy = _policy_improvement(env, V_prime, discount_factor)
 
         # Check if policy has converged
-        if np.allclose(V_prime, V, atol=theta):
+        if np.array_equal(new_policy, policy): # Or np.all(new_policy == policy)
             break
 
         policy = new_policy
         V = V_prime
 
-    
+    print("Final Policy:")
+    print(policy) 
     return policy
