@@ -46,7 +46,7 @@ class CarRental(BaseEnv):
         reward, transition_probs = self.get_reward(s,action,next_state)
         next_state_prob = transition_probs.get(next_state, 0)
         next_state_index = self.states.index(next_state)
-        return next_state_index, reward, next_state_prob, False, {}
+        return next_state_index, reward, False, next_state_prob
 
     def get_reward(self, state, action,next_state=None):
         #moving cost for that day

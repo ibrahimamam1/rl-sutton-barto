@@ -8,9 +8,10 @@ class Gridworld(BaseEnv):
         self.rows = rows
         self.cols = cols
         self.terminal_states = terminal_states or [0, rows*cols-1]
-        self.actions = ["up", "down", "left", "right"]
-        self.action_to_idx = {a: i for i, a in enumerate(self.actions)}
-        self.idx_to_action = {i: a for i, a in enumerate(self.actions)}
+        self.actions_space = ["up", "down", "left", "right"]
+        self.observation_space = np.arange(rows*cols) 
+        self.action_to_idx = {a: i for i, a in enumerate(self.actions_space)}
+        self.idx_to_action = {i: a for i, a in enumerate(self.actions_space)}
         self.action_deltas = {
             "up": (-1, 0),
             "down": (1, 0),
@@ -38,7 +39,7 @@ class Gridworld(BaseEnv):
         reward = -1
         done = next_state_idx in self.terminal_states
         
-        return next_state_idx, reward, 1,done, {}
+        return next_state_idx, reward, done, 1
     
     def get_actions(self, state=None):
         """Return all possible actions"""
@@ -67,6 +68,6 @@ class Gridworld(BaseEnv):
     
     @property
     def n_actions(self):
-        return len(self.actions)
+        return len(self.actions_space)
     
        

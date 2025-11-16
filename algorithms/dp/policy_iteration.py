@@ -1,19 +1,22 @@
 import numpy as np
 
 def _policy_evaluation(env, policy, discount_factor, convergence_threshold):
+    print('policy to evaluate')
+    print(policy)
+
     #initialiase values to 0
-    V = np.zeros(env.observation_space.n)
+    V = np.zeros(env.n_states)
 
     while(True):
         delta = 0
 
-        for s in range(env.observation_space.n):
+        for s in range(env.n_states):
             if(s in env.terminal_states):
                 continue 
             v = V[s]
             new_v = 0
 
-            for action_idx, action in enumerate(env.action_space):
+            for action_idx, action in enumerate(env.actions_space):
                 action_prob = policy[s][action_idx]
                 next_obs, reward, terminated, trans_prob = env.step(s, action)
                 new_v += action_prob * trans_prob * (reward + discount_factor * V[next_obs])
@@ -23,18 +26,20 @@ def _policy_evaluation(env, policy, discount_factor, convergence_threshold):
 
         if(delta <= convergence_threshold):
             break
-
+    print("Value for policy:")
+    print(V)
     return V 
                 
 def _policy_improvement(env, Values, discount_factor):
-    new_policy = np.zeros((env.observation_space.n, env.action_space.n))
-    for s in range(env.observation_space.n):
+    print('Ímproving policy')
+    new_policy = np.zeros((env.n_states, env.n_actions))
+    for s in range(env.n_states):
         if s in env.terminal_states:
             continue
 
         #initialise action values for current state
-        q_a = np.zeros(env.action_space.n)
-        for action_idx, action in enumerate(env.action_space):
+        q_a = np.zeros(env.n_actions)
+        for action_idx, action in enumerate(env.actions_space):
             next_obs, reward, terminated, trans_prob = env.step(s, action)
             q_a[action_idx] = trans_prob * (reward + discount_factor * Values[next_obs])
         
@@ -48,12 +53,12 @@ def policy_iteration(env, discount_factor):
     theta = 1e-6
 
     #initialiase Values for states
-    V = np.zeros(env.observation_space.n)
+    V = np.zeros(env.n_states)
 
     #initialise policy to random policy
-    policy = np.zeros((env.observation_space.n, env.action_space.n))
-    for i in range(env.observation_space.n):
-        policy[i] = np.full(env.action_space.n, 1/env.action_space.n) #all actions have equal probability
+    policy = np.zeros((env.n_states, env.n_actions))
+    for i in range(env.n_states):
+        policy[i] = np.full(env.n_actions, 1/env.n_actions) #all actions have equal probability
     
     while(True):
         V_prime = _policy_evaluation(env, policy, discount_factor, theta)
@@ -65,5 +70,6 @@ def policy_iteration(env, discount_factor):
 
         policy = new_policy
         V = V_prime
+
     
     return policy
