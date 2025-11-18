@@ -14,11 +14,6 @@ class BaseEnv(ABC):
         """Take action, return (next_state, reward, done, info)"""
         pass
     
-    @abstractmethod
-    def get_actions(self, state):
-        """Return list of valid actions for given state"""
-        pass
-    
     @property
     @abstractmethod
     def n_states(self):

@@ -19,6 +19,15 @@ class Gridworld(BaseEnv):
             "right": (0, 1)
         }
         self.reset()
+   
+    @property
+    def n_states(self):
+        return self.rows * self.cols
+    
+    @property
+    def n_actions(self):
+        return len(self.actions_space)
+    
     
     def reset(self):
         """Reset to random non-terminal state"""
@@ -56,18 +65,4 @@ class Gridworld(BaseEnv):
             return state  # Stay in place
         return next_s
     
-    def _state_to_index(self, state):
-        return self.cols * state[0] + state[1]
-    
-    def get_state(self, idx):
-        return (idx // self.cols, idx % self.cols)
-    
-    @property
-    def n_states(self):
-        return self.rows * self.cols
-    
-    @property
-    def n_actions(self):
-        return len(self.actions_space)
-    
-       
+      

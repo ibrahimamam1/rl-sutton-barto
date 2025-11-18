@@ -1,4 +1,4 @@
-from base_env import BaseEnv
+from .base_env import BaseEnv
 import numpy as np
 
 class BlackJackEnv(BaseEnv):
@@ -8,9 +8,16 @@ class BlackJackEnv(BaseEnv):
         self.dealer_hand = [] 
         
         self.action_space = [0, 1] #0: hit, 1: stand  
-
         self.deck = None 
 
+    @property
+    def n_states(self):
+        return 21 * 10 # player can range from 2-22, dealer can range from 2-11 
+    
+    @property
+    def n_actions(self):
+        return 2 
+    
     def _create_deck(self):
         # A standard 52-card deck. J, Q, K are 10. Ace is 11 (can be adjusted to 1).
         suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
@@ -31,23 +38,16 @@ class BlackJackEnv(BaseEnv):
 
     def _get_hand_value(self, hand):
         value = sum(hand)
-        num_aces = hand.count(11) # Count aces initially valued as 11
-
-        # Adjust aces if hand is busting
-        while value > 21 and num_aces > 0:
-            value -= 10 # Change an Ace from 11 to 1
-            num_aces -= 1
         return value
         
     def _get_obs(self):
-        return {"player_hand": self.player_hand, "delear_hand": self.dealer_hand}
-    
+        return (self._get_hand_value(self.player_hand), self._get_hand_value(self.dealer_hand))  
     def _get_info(self):
         return {"player total": self._get_hand_value(self.player_hand), "Dealer total": self._get_hand_value(self.dealer_hand)}
     
     def reset(self):
-        self.current_hand = []
-        self.dealers_hand = []
+        self.player_hand = []
+        self.dealer_hand = []
 
         self.deck = self._create_deck()
 
@@ -57,11 +57,13 @@ class BlackJackEnv(BaseEnv):
         
         
         #deal one card to dealer
-        self.dealers_hand.append(self.deck.pop()) 
+        self.dealer_hand.append(self.deck.pop()) 
 
         obs = self._get_obs()
         info = self._get_info()
 
+        print(f'reset env')
+        print(f'starting obs = {obs}')
         return obs, info 
 
     
@@ -70,35 +72,41 @@ class BlackJackEnv(BaseEnv):
         terminated = False
         reward = 0
 
-        player_total = self._get_hand_value(self.current_hand)
+        player_total = self._get_hand_value(self.player_hand)
         dealer_total = self._get_hand_value(self.dealer_hand)
-        
+
         #update state 
         if(action == 0): #hit
-            self.current_hand.append(self.deck.pop())
-            player_total = self._get_hand_value(self.current_hand)
+            print('Action: Hit')
+            self.player_hand.append(self.deck.pop())
+            player_total = self._get_hand_value(self.player_hand)
             
             if player_total > 21:
                 terminated = True
                 reward = -1 # Player busts
             
-            else: #stand 
-                #dealer's turn
-                while(sum(self.dealers_hand) < 17):
-                    self.dealers_hand.append(self.deck.pop)
+        else: #stand
 
-                dealer_total = self._get_hand_value(self.dealers_hand)
-                terminated = True
+            print('Action: Stand')
+            #dealer's turn
+            while(self._get_hand_value(self.dealer_hand) < 17):
+                self.dealer_hand.append(self.deck.pop())
 
-                if(dealer_total > 21 or dealer_total < player_total): #player wins
-                    reward = 1
+            dealer_total = self._get_hand_value(self.dealer_hand)
+            print(f'obs = ({player_total}, {dealer_total}')
+            terminated = True
+
+            if(dealer_total > 21 or dealer_total < player_total): #player wins
+                reward = 1
                  
-                elif(player_total == dealer_total): #draw
-                    reward = 0 
-                else: #dealer wins 
-                    reward = -1  
+            elif(player_total == dealer_total): #draw
+                reward = 0 
+            else: #dealer wins 
+                reward = -1  
 
         obs = self._get_obs()
         info = self._get_info() 
-
+        print(f'obs={obs}')
+        if(terminated):
+            print(f'Episode over. reward = {reward}')
         return obs, reward, terminated, info 
