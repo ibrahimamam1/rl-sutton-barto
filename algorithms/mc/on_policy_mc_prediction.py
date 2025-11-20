@@ -2,7 +2,7 @@ import numpy as np
 from tqdm import tqdm
 from collections import defaultdict
 
-def mc_state_value_policy_evaluation_(env, policy, discount_factor, n_episodes):
+def on_policy_mc_state_value_policy_evaluation_(env, policy, discount_factor, n_episodes):
     """
      Evaluates Values for a given policy using MC Prediction
     """
@@ -32,7 +32,7 @@ def mc_state_value_policy_evaluation_(env, policy, discount_factor, n_episodes):
     print('Policy Evaluated')
     return V
 
-def mc_state_action_value_policy_evaluation_(env, policy, discount_factor, epsilon, n_episodes):
+def on_policy_mc_state_action_value_policy_evaluation_(env, policy, discount_factor, epsilon, n_episodes):
     """
      Evaluates State-Action Values for a given policy using MC Prediction
     """

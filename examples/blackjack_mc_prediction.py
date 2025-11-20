@@ -2,7 +2,7 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from environments.blackjack import BlackJackEnv
-from algorithms.mc.mc_prediction import mc_state_value_policy_evaluation_, mc_state_action_value_policy_evaluation_
+from algorithms.mc.on_policy_mc_prediction import on_policy_mc_state_value_policy_evaluation_, on_policy_mc_state_action_value_policy_evaluation_
 import numpy as np
 
 env = BlackJackEnv()
@@ -20,8 +20,8 @@ for player_sum in range(2, 23):           # Player hand: 2 to 22
             policy[state] = [0.0, 1.0]  # Always stand
 
 # Evaluate the policy
-V = mc_state_value_policy_evaluation_(env, policy, discount_factor=1.0, n_episodes=10000)
-Q = mc_state_action_value_policy_evaluation_(env, policy, discount_factor=1.0, epsilon=0.2, n_episodes=10000)
+V = on_policy_mc_state_value_policy_evaluation_(env, policy, discount_factor=1.0, n_episodes=10000)
+Q = on_policy_mc_state_action_value_policy_evaluation_(env, policy, discount_factor=1.0, epsilon=0.2, n_episodes=10000)
 
 #visualise the values 
 import matplotlib.pyplot as plt

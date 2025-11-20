@@ -22,7 +22,7 @@ class BlackJackEnv(BaseEnv):
         states = []
         for player_sum in range(2, 23):           # Player hand: 2 to 22
             for dealer_showing in range(2, 12):   # Dealer:2  to 11
-                states.append(player_sum, dealer_showing)
+                states.append((player_sum, dealer_showing))
         return states
 
  
