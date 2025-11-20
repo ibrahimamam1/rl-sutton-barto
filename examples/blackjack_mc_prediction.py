@@ -2,10 +2,11 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from environments.blackjack import BlackJackEnv
-from algorithms.mc.mc_prediction import mc_policy_evaluation
+from algorithms.mc.mc_prediction import mc_state_value_policy_evaluation_, mc_state_action_value_policy_evaluation_
 import numpy as np
 
 env = BlackJackEnv()
+
 
 policy = {}
 
@@ -19,7 +20,8 @@ for player_sum in range(2, 23):           # Player hand: 2 to 22
             policy[state] = [0.0, 1.0]  # Always stand
 
 # Evaluate the policy
-V = mc_policy_evaluation(env, policy, discount_factor=1.0, n_episodes=10000)
+V = mc_state_value_policy_evaluation_(env, policy, discount_factor=1.0, n_episodes=10000)
+Q = mc_state_action_value_policy_evaluation_(env, policy, discount_factor=1.0, epsilon=0.2, n_episodes=10000)
 
 #visualise the values 
 import matplotlib.pyplot as plt
@@ -55,5 +57,56 @@ sns.heatmap(V_grid,
 plt.title("Blackjack State-Value Function $V(s)$\n(Policy: Hit if <20, else Stand)", fontsize=16)
 plt.xlabel("Dealer's Showing Card")
 plt.ylabel("Player's Sum")
+plt.tight_layout()
+plt.show()
+
+
+#visualise the Q values 
+Q_hit_grid = np.zeros((len(player_sums), len(dealer_cards)))
+Q_stand_grid = np.zeros((len(player_sums), len(dealer_cards)))
+Q_hit_grid[:] = np.nan
+Q_stand_grid[:] = np.nan
+
+for i, player in enumerate(player_sums):
+    for j, dealer in enumerate(dealer_cards):
+        state = (player, dealer)
+        if state in Q:
+             # Q[state] is an array of size 2: [Q(s, hit), Q(s, stand)]
+             # Assuming action 0 is Hit and 1 is Stand based on BlackJackEnv
+             Q_hit_grid[i, j] = Q[state][0]
+             Q_stand_grid[i, j] = Q[state][1]
+
+fig, axes = plt.subplots(1, 2, figsize=(18, 8))
+
+# Plot Q-values for Hit
+sns.heatmap(Q_hit_grid,
+            annot=True,
+            fmt=".2f",
+            cmap="coolwarm",
+            xticklabels=dealer_cards,
+            yticklabels=player_sums,
+            cbar_kws={'label': 'Q(s, Hit)'},
+            square=True,
+            center=0.0,
+            ax=axes[0])
+axes[0].set_title("Action-Value $Q(s, Hit)$", fontsize=16)
+axes[0].set_xlabel("Dealer's Showing Card")
+axes[0].set_ylabel("Player's Sum")
+
+# Plot Q-values for Stand
+sns.heatmap(Q_stand_grid,
+            annot=True,
+            fmt=".2f",
+            cmap="coolwarm",
+            xticklabels=dealer_cards,
+            yticklabels=player_sums,
+            cbar_kws={'label': 'Q(s, Stand)'},
+            square=True,
+            center=0.0,
+            ax=axes[1])
+axes[1].set_title("Action-Value $Q(s, Stand)$", fontsize=16)
+axes[1].set_xlabel("Dealer's Showing Card")
+axes[1].set_ylabel("Player's Sum")
+
 plt.tight_layout()
 plt.show()

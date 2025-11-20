@@ -17,7 +17,15 @@ class BlackJackEnv(BaseEnv):
     @property
     def n_actions(self):
         return 2 
-    
+
+    def get_states(self):
+        states = []
+        for player_sum in range(2, 23):           # Player hand: 2 to 22
+            for dealer_showing in range(2, 12):   # Dealer:2  to 11
+                states.append(player_sum, dealer_showing)
+        return states
+
+ 
     def _create_deck(self):
         # A standard 52-card deck. J, Q, K are 10. Ace is 11 (can be adjusted to 1).
         suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
