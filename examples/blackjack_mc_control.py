@@ -9,18 +9,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 env = BlackJackEnv()
-policy = on_policy_mc_control(env, n_iterations=500000, epsilon=0.2)
+policy = on_policy_mc_control(env, n_iterations=10000, epsilon=0.2)
 V = on_policy_mc_state_value_policy_evaluation_(env, policy, discount_factor=1, epsilon=0.2, n_episodes=5000)
     
-
+#plot values
 player_sums = range(2, 22)
 dealer_cards = range(2, 12)
 
-# Initialize value matrix
 V_grid = np.zeros((len(player_sums), len(dealer_cards)))
-V_grid[:] = np.nan  # Fill with NaN for missing states
+V_grid[:] = np.nan  
 
-# Fill in the values
 for i, player in enumerate(player_sums):
     for j, dealer in enumerate(dealer_cards):
         state = (player, dealer)
