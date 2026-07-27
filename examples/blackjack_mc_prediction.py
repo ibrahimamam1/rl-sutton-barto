@@ -2,12 +2,10 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from environments.blackjack import BlackJackEnv
-from algorithms.mc.on_policy_mc_prediction import on_policy_mc_state_value_policy_evaluation_, on_policy_mc_state_action_value_policy_evaluation_
+from algorithms.mc_prediction import mc_prediction
 import numpy as np
 
 env = BlackJackEnv()
-
-
 policy = {}
 
 # Define all possible states
@@ -15,98 +13,67 @@ for player_sum in range(2, 23):           # Player hand: 2 to 22
     for dealer_showing in range(2, 12):   # Dealer:2  to 11
         state = (player_sum, dealer_showing)
         if player_sum < 20:
-            policy[state] = [1.0, 0.0]  # Always hit
+            policy[state] = 1  # Always hit
         else:
-            policy[state] = [0.0, 1.0]  # Always stand
+            policy[state] = 0  # Always stand
 
 # Evaluate the policy
-V = on_policy_mc_state_value_policy_evaluation_(env, policy, discount_factor=1.0, n_episodes=10000)
-Q = on_policy_mc_state_action_value_policy_evaluation_(env, policy, discount_factor=1.0, epsilon=0.2, n_episodes=10000)
+V = mc_prediction(env, policy, gamma=1)
 
-#visualise the values 
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
 
-player_sums = range(2, 22)
-dealer_cards = range(2, 12)
+# ------------------------------------------------------------------
+# 1.  Convert V into a grid
+# ------------------------------------------------------------------
+player_range = np.arange(2, 23)   # 2 .. 22
+dealer_range = np.arange(2, 12)   # 2 .. 11 (dealer's showing card)
 
-# Initialize value matrix
-V_grid = np.zeros((len(player_sums), len(dealer_cards)))
-V_grid[:] = np.nan  # Fill with NaN for missing states
+# Initialize with NaN so unvisited states are gray/blank
+V_grid = np.full((len(dealer_range), len(player_range)), np.nan)
 
-# Fill in the values
-for i, player in enumerate(player_sums):
-    for j, dealer in enumerate(dealer_cards):
-        state = (player, dealer)
-        if state in V:
-            V_grid[i, j] = V[state]
+for (p, d), val in V.items():
+    # Filter to the region we expect for this policy
+    if 2 <= p <= 22 and 2 <= d <= 11:
+        row = d - 2      # y-index (dealer)
+        col = p - 2      # x-index (player)
+        V_grid[row, col] = val
 
-# Plot heatmap
-plt.figure(figsize=(10, 8))
-sns.heatmap(V_grid,
-            annot=True,
-            fmt=".2f",
-            cmap="coolwarm",
-            xticklabels=dealer_cards,
-            yticklabels=player_sums,
-            cbar_kws={'label': 'State Value $V(s)$'},
-            square=True,
-            center=0.0)
-
-plt.title("Blackjack State-Value Function $V(s)$\n(Policy: Hit if <20, else Stand)", fontsize=16)
-plt.xlabel("Dealer's Showing Card")
-plt.ylabel("Player's Sum")
+# ------------------------------------------------------------------
+# 2.  Heatmap
+# ------------------------------------------------------------------
+plt.figure(figsize=(14, 6))
+ax = sns.heatmap(
+    V_grid,
+    xticklabels=player_range,
+    yticklabels=dealer_range,
+    cmap="RdYlGn",          # diverging: red (bad) -> green (good)
+    center=0,               # center colormap on 0
+    vmin=-1, vmax=1,        # rewards are -1, 0, +1
+    linewidths=0.5,
+    cbar_kws={"label": "Estimated State Value V(s)"},
+    annot=False             # set True if you want numbers inside cells
+)
+ax.set_xlabel("Player Hand Sum")
+ax.set_ylabel("Dealer Showing Card")
+ax.set_title("Value Function — Policy: Hit if Player < 20, Stand otherwise")
 plt.tight_layout()
 plt.show()
 
+# ------------------------------------------------------------------
+# 3.  (Optional) Line plot — easier to compare curves
+# ------------------------------------------------------------------
+plt.figure(figsize=(11, 5))
+for d in dealer_range:
+    values = [V.get((p, d), np.nan) for p in player_range]
+    plt.plot(player_range, values, marker="o", label=f"Dealer {d}")
 
-#visualise the Q values 
-Q_hit_grid = np.zeros((len(player_sums), len(dealer_cards)))
-Q_stand_grid = np.zeros((len(player_sums), len(dealer_cards)))
-Q_hit_grid[:] = np.nan
-Q_stand_grid[:] = np.nan
-
-for i, player in enumerate(player_sums):
-    for j, dealer in enumerate(dealer_cards):
-        state = (player, dealer)
-        if state in Q:
-             # Q[state] is an array of size 2: [Q(s, hit), Q(s, stand)]
-             # Assuming action 0 is Hit and 1 is Stand based on BlackJackEnv
-             Q_hit_grid[i, j] = Q[state][0]
-             Q_stand_grid[i, j] = Q[state][1]
-
-fig, axes = plt.subplots(1, 2, figsize=(18, 8))
-
-# Plot Q-values for Hit
-sns.heatmap(Q_hit_grid,
-            annot=True,
-            fmt=".2f",
-            cmap="coolwarm",
-            xticklabels=dealer_cards,
-            yticklabels=player_sums,
-            cbar_kws={'label': 'Q(s, Hit)'},
-            square=True,
-            center=0.0,
-            ax=axes[0])
-axes[0].set_title("Action-Value $Q(s, Hit)$", fontsize=16)
-axes[0].set_xlabel("Dealer's Showing Card")
-axes[0].set_ylabel("Player's Sum")
-
-# Plot Q-values for Stand
-sns.heatmap(Q_stand_grid,
-            annot=True,
-            fmt=".2f",
-            cmap="coolwarm",
-            xticklabels=dealer_cards,
-            yticklabels=player_sums,
-            cbar_kws={'label': 'Q(s, Stand)'},
-            square=True,
-            center=0.0,
-            ax=axes[1])
-axes[1].set_title("Action-Value $Q(s, Stand)$", fontsize=16)
-axes[1].set_xlabel("Dealer's Showing Card")
-axes[1].set_ylabel("Player's Sum")
-
+plt.axhline(0, color="black", linestyle="--", alpha=0.4)
+plt.ylim(-1.05, 1.05)
+plt.xlabel("Player Hand Sum")
+plt.ylabel("Estimated Value V(s)")
+plt.title("State Value by Dealer Showing Card")
+plt.legend(title="Dealer", bbox_to_anchor=(1.05, 1), loc="upper left")
 plt.tight_layout()
 plt.show()

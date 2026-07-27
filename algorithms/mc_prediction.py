@@ -1,11 +1,12 @@
 import numpy as np
 from collections import defaultdict
 from environments.base_env import ModelFreeEnv
+from collections import defaultdict
 
 def mc_prediction(env: ModelFreeEnv, policy, gamma=0.9, n_episodes=100):
     assert isinstance(env, ModelFreeEnv), "mc prediction is model-free; use ModelFreeEnv"
 
-    V = np.zeros(env.n_states)
+    V = defaultdict(int)
     returns = defaultdict(list)
 
     for ep in range(n_episodes):
