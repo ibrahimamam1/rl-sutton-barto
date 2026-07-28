@@ -18,7 +18,8 @@ def mc_prediction(env: ModelFreeEnv, policy, gamma=0.9, n_episodes=100):
         done = False
         while not done:
             states.append(obs)
-            action = policy[obs]
+            probs = policy[obs]
+            action = np.random.choice(env.n_actions, p=probs)
             obs, reward, done = env.step(action)
             rewards.append(reward)
 
